@@ -1,0 +1,97 @@
+---
+title: "Simone Biles Analysis"
+author: "Audrey Bertin"
+date: "7/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readr)
+library(ggthemes)
+library(gghighlight)
+library(gapminder)
+library(RColorBrewer)
+```
+
+```{r}
+athletes <- readr::read_csv("data/olympics/athlete_events.csv")
+regions <- readr::read_csv("data/olympics/noc_regions.csv")
+```
+
+```{r}
+gymnastics <- athletes %>%
+  filter(Sport == "Gymnastics", Sex == "F")
+```
+
+```{r}
+gymnastics_women <- gymnastics %>%
+  mutate(EventName = stringr::str_remove(Event, "Gymnastics Women's")) %>%
+  select(-Event) %>%
+  rename("Event" = "EventName")
+```
+
+```{r}
+medals <- gymnastics_women %>%
+  filter(!is.na(Medal)) %>%
+  group_by(Year, Team) %>%
+  summarize(Gold = sum(Medal == "Gold"),
+            Silver = sum(Medal == "Silver"),
+            Bronze = sum(Medal == "Bronze"),
+            Total = Gold + Silver + Bronze)
+```
+
+```{r}
+top_medalists <- medals %>%
+  group_by(Team) %>%
+  summarize(totalMedals = sum(Total), meanMedals = mean(Total)) %>%
+  arrange(desc(totalMedals)) %>%
+  head(10)
+```
+
+
+```{r}
+medals_long <- medals %>%
+  pivot_longer(3:6, names_to = "MedalType", values_to = "MedalsAwarded")
+
+medals_long$MedalType = factor(medals_long$MedalType, levels = c("Gold", "Silver", "Bronze", "Total"))
+```
+
+```{r}
+medals_long %>%
+  filter(Team %in% top_medalists$Team) %>%
+  ggplot(aes(x = Year, y = MedalsAwarded, color = Team)) + geom_line() + facet_wrap(~MedalType) +
+  theme_fivethirtyeight() +
+  scale_color_brewer(palette = "Paired")
+```
+```{r}
+# Teams with average medals awarded > 4
+medals_long %>%
+  filter(Team %in% top_medalists$Team) %>%
+  ggplot(aes(x = Year, y = MedalsAwarded, color = Team)) + geom_line() + facet_wrap(~MedalType) +
+  theme_fivethirtyeight() +
+  scale_color_brewer(palette = "Paired") +
+  gghighlight(mean(MedalsAwarded) > 4) 
+```
+
+```{r}
+win_rates <- gymnastics_women %>%
+  group_by(Name, Team) %>%
+  summarize(Events = n_distinct(Games, Event), Medals = sum(!is.na(Medal)), Golds = sum(Medal == "Gold", na.rm = TRUE), MedalRate = round(Medals/Events, 2), WinRate = round(Golds/Events,2)) %>%
+  arrange(desc(MedalRate)) %>%
+  filter(Events >= 4)
+```
+
+```{r}
+win_rates %>%
+  arrange(desc(WinRate)) %>%
+  head(10)
+```
+```{r}
+win_rates %>%
+  arrange(desc(MedalRate)) %>%
+  head(10)
+```
+
+
