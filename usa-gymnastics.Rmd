@@ -13,6 +13,7 @@ library(ggthemes)
 library(gghighlight)
 library(gapminder)
 library(RColorBrewer)
+library(formattable)
 ```
 
 ```{r}
@@ -63,24 +64,30 @@ medals_long %>%
   filter(Team %in% top_medalists$Team) %>%
   ggplot(aes(x = Year, y = MedalsAwarded, color = Team)) + geom_line() + facet_wrap(~MedalType) +
   theme_fivethirtyeight() +
-  scale_color_brewer(palette = "Paired")
-```
-```{r}
-# Teams with average medals awarded > 4
-medals_long %>%
-  filter(Team %in% top_medalists$Team) %>%
-  ggplot(aes(x = Year, y = MedalsAwarded, color = Team)) + geom_line() + facet_wrap(~MedalType) +
-  theme_fivethirtyeight() +
   scale_color_brewer(palette = "Paired") +
-  gghighlight(mean(MedalsAwarded) > 4) 
+  ggtitle("Medals Won By Team in Women's Artistic Gymnastics, 1928-2016 Olympic Games",
+          subtitle = "The 10 Countries With The Most Total Medals") +
+  scale_x_continuous(breaks = c(1928, 1936,  1944,  1952,  1960,  1968,  1976,  1984,  1992,  2000, 2008,  2016), labels = c("'28", "'36", "'44", "'52", "'60", "'68", "'76", "'84", "'92", "'00", "'08", "'16"))
 ```
+
 
 ```{r}
 win_rates <- gymnastics_women %>%
   group_by(Name, Team) %>%
   summarize(Events = n_distinct(Games, Event), Medals = sum(!is.na(Medal)), Golds = sum(Medal == "Gold", na.rm = TRUE), MedalRate = round(Medals/Events, 2), WinRate = round(Golds/Events,2)) %>%
   arrange(desc(MedalRate)) %>%
-  filter(Events >= 4)
+  filter(Events >= 4) 
+
+medal_rates_pct <- win_rates$MedalRate
+win_rates_pct <- win_rates$WinRate
+
+length(medal_rates_pct[medal_rates_pct > 0])/length(medal_rates_pct)
+length(win_rates_pct[win_rates_pct > 0])/length(win_rates_pct)
+
+win_rates <- win_rates %>%
+  mutate(MedalRatePercentile = round(quantile(medal_rates_pct[medal_rates_pct > 0], MedalRate), 2),
+        WinRatePercentile = round(quantile(win_rates_pct[win_rates_pct > 0], WinRate), 2))
+
 ```
 
 ```{r}
@@ -89,9 +96,85 @@ win_rates %>%
   head(10)
 ```
 ```{r}
-win_rates %>%
+medal_rate_top10 <- win_rates %>%
   arrange(desc(MedalRate)) %>%
   head(10)
+
+formattable(medal_rate_top10, 
+            align =c("l","l","c","c","c", "c", "c", "c", "c"), 
+              list(`Name` = formatter(
+              "span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Team` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Events` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Medals`= formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Golds`= formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `MedalRate`= color_tile("#A5F9CF", "#5EC391"),
+              `WinRate`= color_tile("#F0D588", "#E1AF28"),
+              `MedalRatePercentile`= formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `WinRatePercentile`= formatter("span", style = ~ style(color = "grey",font.weight = "bold"))))
+              
+              
+              #`Medals`= color_tile(customGreen, customGreen0),
+              #`Golds`= color_tile(customGreen, customGreen0),
+              #`MedalRate`= color_tile(customGreen, customGreen0),
+              #`WinRate`= color_tile(customGreen, customGreen0),
+              #`MedalRatePercentile`= color_tile(customPurple, customPurple0),
+              #`WinRatePercentile`= color_tile(customPurple, customPurple0)))
+```
+
+```{r}
+event_records <- gymnastics_women %>%
+  group_by(Team, Event, Year) %>%
+  summarize(NumCompetitors = n(), NumMedals = sum(!is.na(Medal)), NumGolds = sum(Medal == "Gold", na.rm = TRUE), MedalRate = NumMedals/NumCompetitors, WinRate = NumGolds/NumCompetitors) %>%
+  arrange(desc(WinRate))
+```
+
+```{r}
+event_records$Event <- stringr::str_trim(event_records$Event)
+```
+
+```{r}
+all_around <- event_records %>%
+  filter(Event == "Team All-Around") %>%
+  group_by(Team) %>%
+  summarize(NumYearsGold = sum(WinRate == 1),
+            NumYearsMedaling = sum(MedalRate == 1)) %>%
+  arrange(desc(NumYearsGold))
+
+```
+
+```{r}
+all_around %>%
+  filter(NumYearsGold > 0) %>%
+  ggplot(aes(x = reorder(Team, NumYearsGold), y = NumYearsGold)) + geom_col(fill = "goldenrod2") +
+  theme_fivethirtyeight() +
+  scale_y_continuous(breaks = c(2, 4, 6, 8, 10)) +
+  coord_flip() +
+  ggtitle("The Most Victorious Countries, All-Around",
+          subtitle = "# of Olympics Where Team Won The All-Around Gold Medal")
+   
+
+```
+
+```{r}
+all_around %>%
+  filter(NumYearsGold > 0) %>%
+  ggplot(aes(x = reorder(Team, NumYearsMedaling), y = NumYearsMedaling)) + geom_col() +
+  theme_fivethirtyeight() +
+  scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +
+  coord_flip() +
+  ggtitle("The Most Medaling Countries, All-Around", subtitle = "# Of Olympics Where Team Won A Medal In The Team All-Around Event") 
+  
+
+```
+
+```{r}
+four_events <- event_records %>%
+  filter(Event %in% c("Balance Beam", "Uneven Bars", "Floor Exercise", "Horse Vault")) %>%
+  group_by(Team, Event) %>%
+  summarize(NumGolds = sum(NumGolds), NumMedals = sum(NumMedals)) %>%
+  arrange(desc(NumGolds))
+  
 ```
 
 
