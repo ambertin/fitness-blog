@@ -7,24 +7,37 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+
 ```
 
-## R Markdown
+```{r}
+#fights_raw <- readr::read_delim("data/ufc/raw_total_fight_data.csv", delim = ";")
+fighter <- readr::read_csv("data/ufc/raw_fighter_details.csv")
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+fights <- readr::read_csv("data/ufc/data.csv")
+#preprocessed <- readr::read_csv("data/ufc/preprocessed_data.csv")
 ```
 
-## Including Plots
+# Data Prep
 
-You can also embed plots, for example:
+```{r}
+fighters_clean <- fighters %>%
+  separate(Height, into = c("ft", "inch"), sep = " ") %>%
+  mutate(ft = as.numeric(stringr::str_sub(ft, end = -2)),
+         inch = as.numeric(stringr::str_sub(inch, end = -2)),
+         Height = (ft * 12) + inch,
+         Weight = as.numeric(stringr::str_sub(Weight, end = -6)),
+         Reach = as.numeric(stringr::str_sub(Reach, end = -2)),
+         Str_Acc = as.numeric(stringr::str_sub(Str_Acc, end = -2)),
+         Str_Def = as.numeric(stringr::str_sub(Str_Def, end = -2)),
+         TD_Acc = as.numeric(stringr::str_sub(TD_Acc, end = -2)),
+         TD_Def = as.numeric(stringr::str_sub(TD_Def, end = -2))) %>%
+  select(-ft, -inch) %>%
+  relocate(fighter_name, Height) %>%
+  rename("FighterName" = "fighter_name")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
