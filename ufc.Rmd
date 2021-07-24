@@ -235,6 +235,7 @@ blue_fighters_raw <- raw_ufc_women %>%
   rename("Fighter" = "fighter")
 
 all_fighters_raw_clean <- rbind(red_fighters_raw, blue_fighters_raw) %>%
+  rowwise() %>%
   mutate(SIG_STR_MADE = as.numeric(stringr::str_split(SIG_STR., " of ")[[1]][1]),
          SIG_STR_ATTEMPTED = as.numeric(stringr::str_split(SIG_STR., " of ")[[1]][2]),
          SIG_STR_PROP = round(SIG_STR_MADE/SIG_STR_ATTEMPTED,2),
@@ -268,6 +269,127 @@ all_fighters_raw_clean <- rbind(red_fighters_raw, blue_fighters_raw) %>%
 
 
 ```{r}
+# CLINCH PROP
+
+# ROUSEY: 
+rousey_only <- rousey_cleaned_final %>%
+  filter(Fighter == "Ronda Rousey") 
+
+ROUSEY_MEAN_CLINCH_PROP <- mean(rousey_only$CLINCH_PROP, na.rm = TRUE)
+ROUSEY_MEAN_SIG_STR_PROP <- mean(rousey_only$SIG_STR_PROP, na.rm = TRUE)
+ROUSEY_MEAN_TOTAL_STR_PROP <- mean(rousey_only$TOTAL_STR_PROP, na.rm = TRUE)
+ROUSEY_MEAN_TD_PROP <- mean(rousey_only$TD_PROP, na.rm = TRUE)
+ROUSEY_MEAN_HEAD_PROP <- mean(rousey_only$HEAD_PROP, na.rm = TRUE)
+ROUSEY_MEAN_BODY_PROP <- mean(rousey_only$BODY_PROP, na.rm = TRUE)
+ROUSEY_MEAN_LEG_PROP <- mean(rousey_only$LEG_PROP, na.rm = TRUE)
+ROUSEY_MEAN_DISTANCE_PROP <- mean(rousey_only$DISTANCE_PROP, na.rm = TRUE)
+ROUSEY_MEAN_GROUND_PROP <- mean(rousey_only$GROUND_PROP, na.rm = TRUE)
+
+```
+
+
+```{r}
+# ROUSEY vs OTHER WOMEN in UFC
+
+# SIGNIFICANT STRIKES IN CLINCH
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = CLINCH_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_CLINCH_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Significant Strikes From CLINCH Position")
+
+# SIGNIFICANT STRIKES ON GROUND
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = GROUND_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_GROUND_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Significant Strikes From GROUND Position")
+
+# SIGNIFICANT STRIkES IN GENERAL
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = SIG_STR_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_SIG_STR_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Total Significant Strikes")
+
+# TOTAL STRIKES
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = TOTAL_STR_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_TOTAL_STR_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Total Strikes")
+
+
+# TAKEDOWNS
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = TD_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_TD_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Takedowns")
+
+# HEAD SHOTS
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = HEAD_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_HEAD_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Strikes to the HEAD")
+
+# BODY SHOTS
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = BODY_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_BODY_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Strikes to the BODY")
+
+# LEG SHOTS
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = LEG_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_LEG_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Strikes to the LEG")
+
+# DISTANCE SHOTS
+
+all_fighters_raw_clean %>%
+  ggplot(aes(x = DISTANCE_PROP)) + 
+  geom_histogram(bins = 50) +
+  geom_vline(xintercept  = ROUSEY_MEAN_DISTANCE_PROP, color = "red") +
+  theme_fivethirtyeight() +
+  ylab(NULL) +
+  theme(axis.text.y= element_blank()) +
+  ggtitle("Strikes from Distance")
 
 ```
 
