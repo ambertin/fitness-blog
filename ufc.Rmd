@@ -63,3 +63,54 @@ fights_women %>%
   ggtitle("The Growth of UFC Over Time", subtitle = "Women's Fights Still Trail Far Behind Men's, But Have Increased Significantly In Recent Years")
 ```
 
+
+```{r}
+rousey <- fights_women %>%
+  filter(R_fighter == "Ronda Rousey" | B_fighter == "Ronda Rousey") %>%
+  arrange(date) %>%
+  mutate(won = c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE),
+         fight = 1:8) %>%
+  relocate(R_fighter, B_fighter, won, fight)
+
+```
+
+
+Ronda Rousey
+
+8 fights total, won first 6 then lost to Holly Holm and Amanda Nunes
+
+No data on first fight vs Liz Carmouche, but for other wins, here's stats:
+
+```{r}
+# Rousey's Stats
+
+R_data <- rousey %>%
+  select(won, "fight":"B_Weight_lbs", "B_age") %>%
+  slice(1:7) %>%
+  rename_all(~stringr::str_replace(.,"B_",""))
+
+B_data <- rousey %>%
+  select("won":"weight_class", "R_avg_KD":"R_age", -B_age) %>%
+  slice(8) %>%
+  rename_all(~stringr::str_replace(.,"R_",""))
+
+rousey_complete <- rbind(R_data, B_data) %>%
+  mutate(fighter = rep("Ronda Rousey", 8)) %>%
+  relocate(fighter)
+
+# Opponents' Stats
+
+R_data_opp <- rousey %>%
+  select(won, "fight":"B_Weight_lbs", "B_age") %>%
+  slice(8) %>%
+  rename_all(~stringr::str_replace(.,"B_",""))
+
+B_data_opp <- rousey %>%
+  select("won":"weight_class", "R_avg_KD":"R_age", -B_age) %>%
+  slice(1:7) %>%
+  rename_all(~stringr::str_replace(.,"R_",""))
+
+opponents_complete <- rbind(R_data_opp, B_data_opp) %>%
+  arrange(fight)
+```
+
