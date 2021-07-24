@@ -183,8 +183,91 @@ opp_complete <- rbind(B_data, R_data) %>%
   relocate(Fighter)
 
 
+rousey_raw_combined <- rbind(rousey_complete, opp_complete)
+
+rousey_cleaned_final <- rousey_raw_combined %>%
+  rowwise() %>%
+  mutate(SIG_STR_MADE = as.numeric(stringr::str_split(SIG_STR., " of ")[[1]][1]),
+         SIG_STR_ATTEMPTED = as.numeric(stringr::str_split(SIG_STR., " of ")[[1]][2]),
+         SIG_STR_PROP = round(SIG_STR_MADE/SIG_STR_ATTEMPTED,2),
+         TOTAL_STR_MADE = as.numeric(stringr::str_split(TOTAL_STR., " of ")[[1]][1]),
+         TOTAL_STR_ATTEMPTED = as.numeric(stringr::str_split(TOTAL_STR., " of ")[[1]][2]),
+         TOTAL_STR_PROP = round(TOTAL_STR_MADE/TOTAL_STR_ATTEMPTED, 2),
+         TD_MADE = as.numeric(stringr::str_split(TD, " of ")[[1]][1]),
+         TD_ATTEMPTED = as.numeric(stringr::str_split(TD, " of ")[[1]][2]),
+         TD_PROP = round(TD_MADE/TD_ATTEMPTED, 2),
+         HEAD_MADE = as.numeric(stringr::str_split(HEAD, " of ")[[1]][1]),
+         HEAD_ATTEMPTED = as.numeric(stringr::str_split(HEAD, " of ")[[1]][2]),
+         HEAD_PROP = round(HEAD_MADE/HEAD_ATTEMPTED, 2),
+         BODY_MADE = as.numeric(stringr::str_split(BODY, " of ")[[1]][1]),
+         BODY_ATTEMPTED = as.numeric(stringr::str_split(BODY, " of ")[[1]][2]),
+         BODY_PROP = round(BODY_MADE/BODY_ATTEMPTED, 2),
+         LEG_MADE = as.numeric(stringr::str_split(LEG, " of ")[[1]][1]),
+         LEG_ATTEMPTED = as.numeric(stringr::str_split(LEG, " of ")[[1]][2]),
+         LEG_PROP = round(LEG_MADE/LEG_ATTEMPTED, 2),
+         DISTANCE_MADE = as.numeric(stringr::str_split(DISTANCE, " of ")[[1]][1]),
+         DISTANCE_ATTEMPTED = as.numeric(stringr::str_split(DISTANCE, " of ")[[1]][2]),
+         DISTANCE_PROP = round(DISTANCE_MADE/DISTANCE_ATTEMPTED, 2),
+         CLINCH_MADE = as.numeric(stringr::str_split(CLINCH, " of ")[[1]][1]),
+         CLINCH_ATTEMPTED = as.numeric(stringr::str_split(CLINCH, " of ")[[1]][2]),
+         CLINCH_PROP = round(CLINCH_MADE/CLINCH_ATTEMPTED, 2),
+         GROUND_MADE = as.numeric(stringr::str_split(GROUND, " of ")[[1]][1]),
+         GROUND_ATTEMPTED = as.numeric(stringr::str_split(GROUND, " of ")[[1]][2]),
+         GROUND_PROP = round(GROUND_MADE/GROUND_ATTEMPTED, 2)) %>%
+  select("Fighter":"KD", "SIG_STR_MADE":"GROUND_PROP")
+
+```
+
+```{r}
+# Clean other data to math Rousey
+raw_ufc_women <- raw_ufc %>%
+  mutate(sex = ifelse(grepl("Women's", Fight_type) == TRUE, "Female", "Male")) %>%
+  filter(sex == "Female")
+
+red_fighters_raw <- raw_ufc_women %>%
+  select(starts_with("R_")) %>%
+  rename_all(~stringr::str_replace(.,"^R_","")) %>%
+  rename("Fighter" = "fighter")
+
+blue_fighters_raw <- raw_ufc_women %>%
+  select(starts_with("B_")) %>%
+   rename_all(~stringr::str_replace(.,"^B_","")) %>%
+  rename("Fighter" = "fighter")
+
+all_fighters_raw_clean <- rbind(red_fighters_raw, blue_fighters_raw) %>%
+  mutate(SIG_STR_MADE = as.numeric(stringr::str_split(SIG_STR., " of ")[[1]][1]),
+         SIG_STR_ATTEMPTED = as.numeric(stringr::str_split(SIG_STR., " of ")[[1]][2]),
+         SIG_STR_PROP = round(SIG_STR_MADE/SIG_STR_ATTEMPTED,2),
+         TOTAL_STR_MADE = as.numeric(stringr::str_split(TOTAL_STR., " of ")[[1]][1]),
+         TOTAL_STR_ATTEMPTED = as.numeric(stringr::str_split(TOTAL_STR., " of ")[[1]][2]),
+         TOTAL_STR_PROP = round(TOTAL_STR_MADE/TOTAL_STR_ATTEMPTED, 2),
+         TD_MADE = as.numeric(stringr::str_split(TD, " of ")[[1]][1]),
+         TD_ATTEMPTED = as.numeric(stringr::str_split(TD, " of ")[[1]][2]),
+         TD_PROP = round(TD_MADE/TD_ATTEMPTED, 2),
+         HEAD_MADE = as.numeric(stringr::str_split(HEAD, " of ")[[1]][1]),
+         HEAD_ATTEMPTED = as.numeric(stringr::str_split(HEAD, " of ")[[1]][2]),
+         HEAD_PROP = round(HEAD_MADE/HEAD_ATTEMPTED, 2),
+         BODY_MADE = as.numeric(stringr::str_split(BODY, " of ")[[1]][1]),
+         BODY_ATTEMPTED = as.numeric(stringr::str_split(BODY, " of ")[[1]][2]),
+         BODY_PROP = round(BODY_MADE/BODY_ATTEMPTED, 2),
+         LEG_MADE = as.numeric(stringr::str_split(LEG, " of ")[[1]][1]),
+         LEG_ATTEMPTED = as.numeric(stringr::str_split(LEG, " of ")[[1]][2]),
+         LEG_PROP = round(LEG_MADE/LEG_ATTEMPTED, 2),
+         DISTANCE_MADE = as.numeric(stringr::str_split(DISTANCE, " of ")[[1]][1]),
+         DISTANCE_ATTEMPTED = as.numeric(stringr::str_split(DISTANCE, " of ")[[1]][2]),
+         DISTANCE_PROP = round(DISTANCE_MADE/DISTANCE_ATTEMPTED, 2),
+         CLINCH_MADE = as.numeric(stringr::str_split(CLINCH, " of ")[[1]][1]),
+         CLINCH_ATTEMPTED = as.numeric(stringr::str_split(CLINCH, " of ")[[1]][2]),
+         CLINCH_PROP = round(CLINCH_MADE/CLINCH_ATTEMPTED, 2),
+         GROUND_MADE = as.numeric(stringr::str_split(GROUND, " of ")[[1]][1]),
+         GROUND_ATTEMPTED = as.numeric(stringr::str_split(GROUND, " of ")[[1]][2]),
+         GROUND_PROP = round(GROUND_MADE/GROUND_ATTEMPTED, 2)) %>%
+  select("Fighter":"KD", "SIG_STR_MADE":"GROUND_PROP")
+  
+```
 
 
+```{r}
 
 ```
 
