@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
-
+library(ggthemes)
 ```
 
 ```{r}
@@ -39,5 +39,27 @@ fighters_clean <- fighters %>%
   rename("FighterName" = "fighter_name")
 
 
+```
+
+
+```{r}
+fights_women <- fights %>%
+  mutate(sex = ifelse(grepl("Women", weight_class) == TRUE, "Female", "Male")) %>%
+  relocate(R_fighter, B_fighter, sex) %>%
+  mutate(weight_class = stringr::str_remove(weight_class, "Women"))
+```
+
+
+```{r}
+fights_women$sex <- relevel(fights_women$sex, levels = c("Female", "Male"))
+
+# UFC over time
+
+fights_women %>%
+  ggplot(aes(x = date, fill = sex)) + geom_histogram(alpha = 0.5, position = "identity") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_fivethirtyeight() +
+  scale_x_date(date_breaks = "5 year", date_labels = "%Y") +
+  ggtitle("The Growth of UFC Over Time", subtitle = "Women's Fights Still Trail Far Behind Men's, But Have Increased Significantly In Recent Years")
 ```
 
