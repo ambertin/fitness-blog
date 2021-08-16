@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(ggthemes)
+library(formattable)
 ```
 
 ```{r}
@@ -23,7 +24,7 @@ fights <- readr::read_csv("data/ufc/data.csv")
 # Data Prep
 
 ```{r}
-fighters_clean <- fighters %>%
+fighters_clean <- fighter %>%
   separate(Height, into = c("ft", "inch"), sep = " ") %>%
   mutate(ft = as.numeric(stringr::str_sub(ft, end = -2)),
          inch = as.numeric(stringr::str_sub(inch, end = -2)),
@@ -51,7 +52,6 @@ fights_women <- fights %>%
 
 
 ```{r}
-fights_women$sex <- relevel(fights_women$sex, levels = c("Female", "Male"))
 
 # UFC over time
 
@@ -300,7 +300,7 @@ all_fighters_raw_clean %>%
   theme_fivethirtyeight() +
   ylab(NULL) +
   theme(axis.text.y= element_blank()) +
-  ggtitle("Significant Strikes From CLINCH Position")
+  ggtitle("Significant Strikes From Clinch Position")
 
 # SIGNIFICANT STRIKES ON GROUND
 
@@ -311,7 +311,7 @@ all_fighters_raw_clean %>%
   theme_fivethirtyeight() +
   ylab(NULL) +
   theme(axis.text.y= element_blank()) +
-  ggtitle("Significant Strikes From GROUND Position")
+  ggtitle("Significant Strikes From Ground Position")
 
 # SIGNIFICANT STRIkES IN GENERAL
 
@@ -356,7 +356,7 @@ all_fighters_raw_clean %>%
   theme_fivethirtyeight() +
   ylab(NULL) +
   theme(axis.text.y= element_blank()) +
-  ggtitle("Strikes to the HEAD")
+  ggtitle("Strikes to the Head")
 
 # BODY SHOTS
 
@@ -367,7 +367,7 @@ all_fighters_raw_clean %>%
   theme_fivethirtyeight() +
   ylab(NULL) +
   theme(axis.text.y= element_blank()) +
-  ggtitle("Strikes to the BODY")
+  ggtitle("Strikes to the Body")
 
 # LEG SHOTS
 
@@ -378,7 +378,7 @@ all_fighters_raw_clean %>%
   theme_fivethirtyeight() +
   ylab(NULL) +
   theme(axis.text.y= element_blank()) +
-  ggtitle("Strikes to the LEG")
+  ggtitle("Strikes to the Leg")
 
 # DISTANCE SHOTS
 
@@ -393,3 +393,38 @@ all_fighters_raw_clean %>%
 
 ```
 
+# Rousey's 8 Fights: Summary Table
+```{r}
+rousey_table <- rousey_cleaned_final %>%
+  filter(Fighter=="Ronda Rousey") %>%
+  select(date, win_by, Winner, KD, ends_with("_PROP"))
+
+rousey_table$Opponent <- c("Liz Carmouche", "Miesha Tate", "Sara McMann",
+                     "Alexis Davis", "Cat Zingano", "Bethe Correa",
+                     "Holly Holm", "Amanda Nunes")
+
+rousey_table <- rousey_table %>%
+  select(-KD) %>%
+  rename("Date" = "date",
+         "Win By" = "win_by") %>%
+  rename_all(~stringr::str_replace(.,"_PROP","")) %>%
+  relocate(Opponent, Date, Winner, `Win By`)
+
+```
+
+```{r}
+formattable(rousey_table, 
+            align =c("l", "l", "l", "l", "c", "c", "c", "c", "c","c", "c", "c", "c", "c"), 
+              list(`Opponent` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Date` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Winner` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Win By`= formatter("span", style = ~ style(color = "grey",font.weight = "bold"))))
+```
+
+# Percentiles
+
+```{r}
+round(quantile(all_fighters_raw_clean$GROUND_PROP, 0.70, na.rm = TRUE), 2)
+```
+
+# 0.6, 0.77, 1

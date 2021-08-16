@@ -1,0 +1,70 @@
+---
+title: "sprinters"
+author: "Audrey Bertin"
+date: "8/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rvest)
+library(tidyverse)
+```
+
+# Scrape data from worldathletics.org on top 100 female 100m times
+
+```{r}
+# Connect to site
+page_100m <- "https://www.worldathletics.org/records/all-time-toplists/sprints/100-metres/outdoor/women/senior?page=1"
+
+top_100m <- read_html(page_100m)
+```
+
+
+```{r}
+# Pull results
+
+results_100m <- top_100m %>% 
+  html_nodes(xpath = '//*[@id="toplists"]/div[3]/table') %>%
+  html_table()
+
+records_100m <- results_100m[[1]] %>%
+  select(Rank, Mark, Competitor, Nat, Venue, Date)
+```
+
+# Get 200m times
+
+```{r}
+# Connect to site
+
+page_200m <- "https://www.worldathletics.org/records/all-time-toplists/sprints/200-metres/outdoor/women/senior?regionType=world&timing=electronic&windReading=regular&page=1&bestResultsOnly=true&firstDay=1899-12-31&lastDay=2021-08-14"
+
+top_200m <- read_html(page_200m)
+```
+
+```{r}
+# Pull data
+
+results_200m <- top_200m %>% 
+  html_nodes(xpath = '//*[@id="toplists"]/div[3]/table') %>%
+  html_table()
+
+records_200m <- results_200m[[1]] %>%
+  select(Rank, Mark, Competitor, Nat, Venue, Date)
+```
+
+# Join Data
+
+```{r}
+records_100m <- records_100m %>%
+  mutate(Distance = rep("100m", 100))
+
+records_200m <- records_200m %>%
+  mutate(Distance = rep("200m", 100))
+
+```
+
+```{r}
+combined_records <- rbind(records_100m, records_200m)
+```
+
