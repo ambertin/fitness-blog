@@ -81,21 +81,81 @@ combined_records <- combined_records %>%
 
 ```{r}
 ggplot(combined_records %>% filter(Distance == "100m"), aes(x = Year, y = Mark)) +
-  geom_point(color = "#00a32f") +
+  geom_point(color = "#00a32f", size = 3) +
   theme_fivethirtyeight() +
   scale_x_continuous(
     breaks = c(1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020),
     labels = c("'60", "'65", "'70", "'75", "'80", "'85", "'90", "'95", "'00", "'05", "'10", "'15", "'20")) +
-  gghighlight(Nat =="JAM")
+  gghighlight(Nat =="JAM") +
+  ggtitle("The Fastest Women in the World - 100m",
+          subtitle = "Top 100 Times in History, Jamaican Records Highlighted Green") +
+  theme(axis.title.x = element_text(),
+        axis.title.y = element_text()) +
+  xlab("Year") +
+  ylab("Time")
+  
 ```
 
 
 ```{r}
 ggplot(combined_records %>% filter(Distance == "200m", Year > 1980), aes(x = Year, y = Mark)) +
-  geom_point(color = "#00a32f") +
+  geom_point(color = "#00a32f", size = 3) +
   theme_fivethirtyeight() +
   scale_x_continuous(
     breaks = c(1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020),
     labels = c( "'85", "'90", "'95", "'00", "'05", "'10", "'15", "'20")) +
-  gghighlight(Nat =="JAM")
+  gghighlight(Nat =="JAM") +
+  ggtitle("The Fastest Women in the World - 200m",
+          subtitle = "Top 100 Times in History, Jamaican Records Highlighted Green") +
+  theme(axis.title.x = element_text(),
+        axis.title.y = element_text()) +
+  xlab("Year") +
+  ylab("Time")
 ```
+
+# Get Olympic Medal Results By Country
+
+Note that these only go through 2016!!
+
+```{r}
+olympics <- readr::read_csv("data/olympics/athlete_events.csv")
+```
+
+```{r}
+olympic_sprinters <- olympics %>% filter(Sport == "Athletics",
+                             Event %in% c("Athletics Women's 100 metres", 
+                                          "Athletics Women's 200 metres"))
+```
+
+```{r}
+table <- olympic_sprinters %>%
+  group_by(Team) %>%
+  summarize(Gold = sum(Medal == "Gold", na.rm = TRUE),
+            Silver = sum(Medal == "Silver", na.rm = TRUE),
+            Bronze = sum(Medal == "Bronze", na.rm = TRUE),
+            Total = Gold + Silver + Bronze) %>%
+  arrange(desc(Total)) %>%
+  head(10)
+```
+
+```{r}
+library(formattable)
+```
+
+```{r}
+formattable(table, 
+            align =c("l","c","c","c","c"),
+            list(`Team` = formatter(
+              "span", style = ~ style(color = "black",font.weight = "bold")),
+              `Gold` = formatter(
+              "span", style = ~ style(color = "gold",font.weight = "bold")),
+              `Silver` = formatter(
+              "span", style = ~ style(color = "grey",font.weight = "bold")),
+              `Bronze` = formatter(
+              "span", style = ~ style(color = "brown",font.weight = "bold")),
+              `Total` = formatter(
+              "span", style = ~ style(color = "green",font.weight = "bold"))
+))
+
+```
+
