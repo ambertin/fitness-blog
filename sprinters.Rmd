@@ -145,10 +145,8 @@ library(formattable)
 ```{r}
 formattable(table, 
             align =c("l","c","c","c","c"),
-            list(`Team` = formatter(
-              "span", style = ~ style(color = "black",font.weight = "bold")),
-              `Gold` = formatter(
-              "span", style = ~ style(color = "gold",font.weight = "bold")),
+            list(`Gold` = formatter(
+              "span", style = ~ style(color = "goldenrod",font.weight = "bold")),
               `Silver` = formatter(
               "span", style = ~ style(color = "grey",font.weight = "bold")),
               `Bronze` = formatter(
