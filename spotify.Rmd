@@ -1,0 +1,27 @@
+---
+title: "spotify"
+author: "Audrey Bertin"
+date: "8/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(spotifyr)
+library(tidyverse)
+```
+
+valence = measure of positivity
+
+```{r}
+workout_playlists <- get_category_playlists("workout")
+```
+
+```{r}
+ids = workout_playlists$id
+```
+
+```{r}
+features <- get_playlist_audio_features("spotify", ids)
+```
+
