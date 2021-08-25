@@ -9,19 +9,225 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(spotifyr)
 library(tidyverse)
+library(ggthemes)
+library(ggridges)
+library(gghighlight)
+library(GGally)
+
+access_token <- get_spotify_access_token()
 ```
 
-valence = measure of positivity
 
 ```{r}
 workout_playlists <- get_category_playlists("workout")
 ```
 
+# Comparison playlists
+
 ```{r}
-ids = workout_playlists$id
+pop_playlists <- get_category_playlists("pop")
+rock_playlists <- get_category_playlists("rock")
+edm_playlists <- get_category_playlists("edm_dance")
+indie_playlists <- get_category_playlists("indie_alt")
+hiphop_playlists <- get_category_playlists("hiphop")
+```
+
+# Get playlist IDs and pull playlist details
+
+```{r}
+workout_ids = workout_playlists$id
+rock_ids = rock_playlists$id
+edm_ids = edm_playlists$id
+indie_ids = indie_playlists$id
+hiphop_ids = hiphop_playlists$id
 ```
 
 ```{r}
-features <- get_playlist_audio_features("spotify", ids)
+workout_features <- get_playlist_audio_features("spotify", workout_ids)
+rock_features <- get_playlist_audio_features("spotify", rock_ids)
+edm_features <- get_playlist_audio_features("spotify", edm_ids)
+indie_features <- get_playlist_audio_features("spotify", indie_ids)
+hiphop_features <- get_playlist_audio_features("spotify", hiphop_ids)
+
 ```
+
+# Add category to each feature dataframe and join
+
+```{r}
+workout_final <- workout_features %>%
+  mutate(Category = "Workout") %>%
+  select(Category, track.name, danceability, energy, key, loudness, speechiness, 
+        acousticness, instrumentalness, liveness, valence, tempo,
+        track.duration_ms, track.explicit, track.popularity, track.album.release_date)
+
+rock_final <- rock_features %>%
+  mutate(Category = "Rock") %>%
+  select(Category,track.name, danceability, energy, key, loudness, speechiness, 
+         acousticness, instrumentalness, liveness, valence, tempo,
+         track.duration_ms, track.explicit, track.popularity, track.album.release_date)
+
+edm_final <- edm_features %>%
+  mutate(Category = "EDM/Dance") %>%
+  select(Category, track.name, danceability, energy, key, loudness, speechiness, 
+         acousticness, instrumentalness, liveness, valence, tempo,
+         track.duration_ms, track.explicit, track.popularity, track.album.release_date)
+
+indie_final <- indie_features %>%
+  mutate(Category = "Indie") %>%
+  select(Category, track.name, danceability, energy, key, loudness, speechiness, 
+         acousticness, instrumentalness, liveness, valence, tempo,
+         track.duration_ms, track.explicit, track.popularity, track.album.release_date)
+
+hiphop_final <- hiphop_features %>%
+  mutate(Category = "Hip Hop") %>%
+  select(Category, track.name, danceability, energy, key, loudness, speechiness, 
+         acousticness, instrumentalness, liveness, valence, tempo,
+         track.duration_ms, track.explicit, track.popularity, track.album.release_date)
+  
+
+spotify_final <- distinct(rbind(workout_final,
+                       rock_final,
+                       edm_final,
+                       indie_final,
+                       hiphop_final))
+
+```
+
+```{r}
+spotify_final <- spotify_final %>%
+  mutate(track.duration_s = track.duration_ms / 1000)
+
+key_letter <- c("C", "C#", "D", "D#", "E",
+             "F", "F#", "G", "G#", "A",
+             "A#", "B")
+
+codes <- c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+
+key_codes <- data.frame(key_letter, codes)
+
+spotify_final <- spotify_final %>%
+  inner_join(key_codes, by = c("key" = "codes"))
+
+# calculate ages of songs in weeks
+
+spotify_final <- spotify_final %>%
+  mutate(track.album.release_date = as.Date(track.album.release_date),
+         song_age_yrs = round(as.numeric(difftime(Sys.Date(), track.album.release_date, units = "weeks")/52.2), 2))
+```
+
+
+```{r}
+ggplot(spotify_final, aes(x = tempo, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+  theme(legend.position = "none")
+```
+```{r}
+ggplot(spotify_final, aes(x = track.duration_s, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+
+```
+
+```{r}
+#valence = happiness
+
+ggplot(spotify_final, aes(x = valence, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+```
+
+```{r}
+ggplot(spotify_final, aes(x = loudness, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+```
+
+
+```{r}
+ggplot(spotify_final, aes(x = energy, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+```
+
+```{r}
+ggplot(spotify_final, aes(x = instrumentalness, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+```
+
+```{r}
+ggplot(spotify_final, aes(x = danceability, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+```
+
+
+
+```{r}
+explicit <- spotify_final %>%
+  group_by(Category) %>%
+  summarize(Percent_Explicit = round(sum(track.explicit == TRUE)/n() * 100))
+
+ggplot(explicit, aes(x = reorder(Category, Percent_Explicit), y = Percent_Explicit)) +
+  geom_col() +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+  gghighlight(Category == "Workout") +
+  theme(legend.position = "none")
+```
+
+# Song ages
+
+```{r}
+ggplot(spotify_final, aes(x = song_age_yrs, y = Category, fill = Category)) +
+  geom_density_ridges(quantile_lines = TRUE,
+                      quantile_fun = function(x, ...)median(x)) +
+  theme_fivethirtyeight() +
+  scale_fill_brewer(palette = "Set2") +
+    theme(legend.position = "none")
+```
+```{r}
+workout <- spotify_final %>%
+  filter(Category == "Workout") %>%
+  select(danceability, energy, loudness, tempo, valence, instrumentalness, song_age_yrs, track.duration_s,
+         track.popularity, track.explicit, track.name)
+
+top5 <- workout %>%
+  arrange(desc(track.popularity)) %>%
+  head(5)
+```
+
+
+```{r}
+top5 %>% 
+  ggparcoord(
+    columns = 1:8, groupColumn = 11,
+    showPoints = TRUE,
+    mapping = ggplot2::aes(size = 1)) + 
+    ggplot2::scale_size_identity() +
+  theme_fivethirtyeight() +
+  scale_color_brewer(palette = "Paired")
+```
+
 
