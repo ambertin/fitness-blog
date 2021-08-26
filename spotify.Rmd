@@ -36,6 +36,7 @@ hiphop_playlists <- get_category_playlists("hiphop")
 
 ```{r}
 workout_ids = workout_playlists$id
+pop_ids = pop_playlists$id
 rock_ids = rock_playlists$id
 edm_ids = edm_playlists$id
 indie_ids = indie_playlists$id
@@ -44,6 +45,7 @@ hiphop_ids = hiphop_playlists$id
 
 ```{r}
 workout_features <- get_playlist_audio_features("spotify", workout_ids)
+pop_features = get_playlist_audio_features("spotify", pop_ids)
 rock_features <- get_playlist_audio_features("spotify", rock_ids)
 edm_features <- get_playlist_audio_features("spotify", edm_ids)
 indie_features <- get_playlist_audio_features("spotify", indie_ids)
@@ -56,6 +58,12 @@ hiphop_features <- get_playlist_audio_features("spotify", hiphop_ids)
 ```{r}
 workout_final <- workout_features %>%
   mutate(Category = "Workout") %>%
+  select(Category, track.name, danceability, energy, key, loudness, speechiness, 
+        acousticness, instrumentalness, liveness, valence, tempo,
+        track.duration_ms, track.explicit, track.popularity, track.album.release_date)
+
+pop_final <-pop_features %>%
+  mutate(Category = "Pop") %>%
   select(Category, track.name, danceability, energy, key, loudness, speechiness, 
         acousticness, instrumentalness, liveness, valence, tempo,
         track.duration_ms, track.explicit, track.popularity, track.album.release_date)
@@ -86,6 +94,7 @@ hiphop_final <- hiphop_features %>%
   
 
 spotify_final <- distinct(rbind(workout_final,
+                       pop_final,
                        rock_final,
                        edm_final,
                        indie_final,
@@ -119,18 +128,22 @@ spotify_final <- spotify_final %>%
 ```{r}
 ggplot(spotify_final, aes(x = tempo, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x), alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Tempo (in BPM) For Songs of Different Genres",
+          subtitle = "Workout songs are often a moderately fast tempo, but their speed can range significantly")
 ```
 ```{r}
 ggplot(spotify_final, aes(x = track.duration_s, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x),  alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+   ggtitle("Distribution of Track Length (in Seconds) For Songs of Different Genres",
+          subtitle = "Workout songs tend to be on the shorter end, similar to hip hop, pop, and EDM")
 
 ```
 
@@ -139,47 +152,49 @@ ggplot(spotify_final, aes(x = track.duration_s, y = Category, fill = Category)) 
 
 ggplot(spotify_final, aes(x = valence, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x),  alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+  ggtitle("Distribution of Valence (AKA 'Happiness') For Songs of Different Genres",
+          subtitle = "Workout songs are happier on average than EDM songs, but less happy than most other genres")
 ```
 
 ```{r}
 ggplot(spotify_final, aes(x = loudness, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x), alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+  ggtitle("Distribution of Loudness For Songs of Different Genres",
+          subtitle = "Workout songs tend to be louder than most other music")
 ```
 
 
 ```{r}
 ggplot(spotify_final, aes(x = energy, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x), alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+  ggtitle("Distribution of Loudness For Songs of Different Genres",
+          subtitle = "Workout songs tend to be either high energy (most songs), or very low energy")
+  
 ```
 
-```{r}
-ggplot(spotify_final, aes(x = instrumentalness, y = Category, fill = Category)) +
-  geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
-  theme_fivethirtyeight() +
-  scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
-```
+
 
 ```{r}
 ggplot(spotify_final, aes(x = danceability, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x), alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+  ggtitle("Distribution of Danceability For Songs of Different Genres",
+          subtitle = "Workout songs are often highly danceable, though danceability can range significantly")
 ```
 
 
@@ -194,7 +209,9 @@ ggplot(explicit, aes(x = reorder(Category, Percent_Explicit), y = Percent_Explic
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
   gghighlight(Category == "Workout") +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  ggtitle("Percentage of Explicit Songs, by Genre",
+          subtitle = "Workout songs are more explicit than indie, edm, or rock songs, but less explicit than pop or hip hop")
 ```
 
 # Song ages
@@ -202,10 +219,12 @@ ggplot(explicit, aes(x = reorder(Category, Percent_Explicit), y = Percent_Explic
 ```{r}
 ggplot(spotify_final, aes(x = song_age_yrs, y = Category, fill = Category)) +
   geom_density_ridges(quantile_lines = TRUE,
-                      quantile_fun = function(x, ...)median(x)) +
+                      quantile_fun = function(x, ...)median(x), alpha = 0.6) +
   theme_fivethirtyeight() +
   scale_fill_brewer(palette = "Set2") +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+  ggtitle("Distribution of Track Ages For Songs of Different Genres",
+          subtitle = "Workout playlists tend to primarily include newer songs, staying away from older tracks")
 ```
 ```{r}
 workout <- spotify_final %>%
@@ -230,4 +249,14 @@ top5 %>%
   scale_color_brewer(palette = "Paired")
 ```
 
+# workout song titles
+
+```{r}
+tracks = paste(workout$track.name, collapse = '')
+writeLines(tracks, "track_names.txt")
+
+source('http://www.sthda.com/upload/rquery_wordcloud.r') 
+
+res<-rquery.wordcloud("track_names.txt", type ="file", lang = "english")
+```
 
